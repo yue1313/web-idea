@@ -1,4 +1,4 @@
-/* ---------- 全体レイアウト ---------- */
+/* 全体レイアウト */
 body {
     margin: 0;
     background: #1e1e1e;
@@ -9,7 +9,7 @@ body {
     flex-direction: column;
 }
 
-/* ---------- ヘッダー ---------- */
+/* ヘッダー */
 #header {
     display: flex;
     justify-content: space-between;
@@ -37,7 +37,7 @@ body {
     background: #0a84d6;
 }
 
-/* ---------- タブデザイン（IDE風） ---------- */
+/* タブ */
 #tabbar {
     background: #1e1e1e;
     padding: 0 10px;
@@ -68,7 +68,7 @@ body {
     border-bottom: 2px solid #007acc;
 }
 
-/* ---------- エディタ・プレビュー ----------- */
+/* エディタ・プレビュー */
 #container {
     flex: 1;
     display: flex;
@@ -92,6 +92,7 @@ body {
     padding: 10px;
     font-family: monospace;
     display: none;
+    overflow: auto;
 }
 
 .editor.active {
@@ -100,6 +101,8 @@ body {
 
 #preview {
     width: 50%;
+    height: 100%;
     border: none;
     background: white;
+    overflow: auto;
 }
