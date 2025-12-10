@@ -13,6 +13,7 @@ function createEditor(id, mode) {
     });
 }
 
+// HTML/CSS/JS/Python 全て CodeMirror で統合
 editors.html = createEditor("htmlEditor", "xml");
 editors.css = createEditor("cssEditor", "css");
 editors.js = createEditor("jsEditor", "javascript");
@@ -26,17 +27,22 @@ document.querySelectorAll(".tab").forEach(tab => {
 
         const lang = e.target.dataset.lang;
         if(lang === "python") {
+            // Python エディタ表示
             editors.python.getWrapperElement().style.display = "block";
+            // HTML/CSS/JS エディタ非表示
             editors.html.getWrapperElement().style.display = "none";
             editors.css.getWrapperElement().style.display = "none";
             editors.js.getWrapperElement().style.display = "none";
+
             document.getElementById("preview").style.display = "none";
             document.getElementById("pyConsole").style.display = "flex";
         } else {
-            editors.python.getWrapperElement().style.display = "none";
+            // HTML/CSS/JS エディタ表示
             editors.html.getWrapperElement().style.display = "block";
             editors.css.getWrapperElement().style.display = "block";
             editors.js.getWrapperElement().style.display = "block";
+            editors.python.getWrapperElement().style.display = "none";
+
             document.getElementById("preview").style.display = "block";
             document.getElementById("pyConsole").style.display = "none";
         }
@@ -58,8 +64,9 @@ let inputResolve = null;
 function waitForInput() {
     return new Promise(resolve => {
         inputResolve = resolve;
-        document.getElementById("pyInput").disabled = false;
-        document.getElementById("pyInput").focus();
+        const inputEl = document.getElementById("pyInput");
+        inputEl.disabled = false;
+        inputEl.focus();
     });
 }
 
@@ -67,7 +74,7 @@ document.getElementById("pyInput").addEventListener("keydown", (e)=>{
     if(e.key === "Enter" && inputResolve){
         const val = e.target.value;
         const outputEl = document.getElementById("pyOutput");
-        outputEl.textContent += val + "\n"; // echo
+        outputEl.textContent += val + "\n"; // echo 入力
         inputResolve(val);
         inputResolve = null;
         e.target.value = "";
@@ -84,25 +91,27 @@ document.getElementById("runBtn").onclick = async () => {
             document.getElementById("pyOutput").textContent = "Python エンジン読み込み中...";
             return;
         }
+
         const code = editors.python.getValue();
         const outputEl = document.getElementById("pyOutput");
         outputEl.textContent = "";
-        document.getElementById("pyInput").value = "";
-        document.getElementById("pyInput").disabled = true;
+        const inputEl = document.getElementById("pyInput");
+        inputEl.value = "";
+        inputEl.disabled = true;
 
         try{
-            // stdin を input() に対応させる
+            // stdin を input() に対応
             pyodide.globals.set("js_input", waitForInput);
             await pyodide.runPythonAsync(`
 import sys
-from js import console, js_input
+from js import js_input
 
 class ConsoleIO:
-    def __init__(self):
-        self.output = console
     def write(self, s):
         if s != '\\n':
-            console.log(s)
+            from js import document
+            outputEl = document.getElementById("pyOutput")
+            outputEl.textContent += s
     def flush(self):
         pass
 
@@ -110,10 +119,11 @@ sys.stdout = ConsoleIO()
 sys.stderr = ConsoleIO()
 
 def input(prompt=""):
-    print(prompt, end="")
+    from js import document
+    outputEl = document.getElementById("pyOutput")
+    outputEl.textContent += prompt
     return js_input()
 `);
-
             await pyodide.runPythonAsync(code);
         } catch(e){
             outputEl.innerHTML += `<span style="color:red;">${e}</span>\n`;
