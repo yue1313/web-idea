@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Web Playground</title>
     <link rel="stylesheet" href="css/styles.css">
+
+    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 </head>
@@ -21,9 +23,9 @@
     <div id="container">
         <!-- エディタ -->
         <div id="editorPane">
-            <textarea id="htmlEditor" class="editor active" placeholder="HTMLを書いてください"></textarea>
-            <textarea id="cssEditor" class="editor active" placeholder="CSSを書いてください"></textarea>
-            <textarea id="jsEditor" class="editor active" placeholder="JSを書いてください"></textarea>
+            <textarea id="htmlEditor" class="editor" placeholder="HTMLを書いてください"></textarea>
+            <textarea id="cssEditor" class="editor" placeholder="CSSを書いてください"></textarea>
+            <textarea id="jsEditor" class="editor" placeholder="JSを書いてください"></textarea>
             <textarea id="pythonEditor" class="editor" placeholder="Pythonを書いてください"></textarea>
         </div>
 
@@ -37,6 +39,7 @@
         </div>
     </div>
 
+    <!-- JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
