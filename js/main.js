@@ -24,7 +24,6 @@ editors.html.getWrapperElement().style.display = "block";
 editors.css.getWrapperElement().style.display = "block";
 editors.js.getWrapperElement().style.display = "block";
 editors.python.getWrapperElement().style.display = "none";
-
 document.getElementById("preview").style.display = "block";
 document.getElementById("pyConsole").style.display = "none";
 
@@ -70,7 +69,7 @@ initPyodide();
 
 // Python input() 用
 let inputResolve = null;
-function waitForInput(){
+async function js_input() {
     return new Promise(resolve=>{
         inputResolve = resolve;
         const inputEl = document.getElementById("pyInput");
@@ -107,29 +106,35 @@ document.getElementById("runBtn").onclick = async ()=>{
         inputEl.disabled=true;
 
         try{
-            pyodide.globals.set("js_input", waitForInput);
+            pyodide.globals.set("js_input", js_input);
 
             await pyodide.runPythonAsync(`
 import sys
-from js import js_input, document
+import asyncio
+import builtins
+from js import document, js_input
 
 class ConsoleIO:
     def write(self, s):
-        if s != '\\n':
-            document.getElementById("pyOutput").textContent += s
+        document.getElementById("pyOutput").textContent += s
     def flush(self): pass
 
 sys.stdout = ConsoleIO()
 sys.stderr = ConsoleIO()
 
-def input(prompt=""):
+async def py_input(prompt=""):
     document.getElementById("pyOutput").textContent += prompt
-    return js_input()
+    val = await js_input()
+    return val
+
+builtins.input = lambda prompt="": asyncio.get_event_loop().run_until_complete(py_input(prompt))
 `);
+
             await pyodide.runPythonAsync(code);
         }catch(e){
             outputEl.innerHTML += `<span style="color:red;">${e}</span>\n`;
         }
+
     }else{
         // HTML/CSS/JS プレビュー
         const html = editors.html.getValue();
