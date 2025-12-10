@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Web Playground</title>
     <link rel="stylesheet" href="css/styles.css">
-
     <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
@@ -21,18 +20,15 @@
     </div>
 
     <div id="container">
-        <!-- エディタ -->
         <div id="editorPane">
-            <textarea id="htmlEditor" class="editor" placeholder="HTMLを書いてください"></textarea>
-            <textarea id="cssEditor" class="editor" placeholder="CSSを書いてください"></textarea>
-            <textarea id="jsEditor" class="editor" placeholder="JSを書いてください"></textarea>
-            <textarea id="pythonEditor" class="editor" placeholder="Pythonを書いてください"></textarea>
+            <textarea id="htmlEditor" class="editor"></textarea>
+            <textarea id="cssEditor" class="editor"></textarea>
+            <textarea id="jsEditor" class="editor"></textarea>
+            <textarea id="pythonEditor" class="editor"></textarea>
         </div>
 
-        <!-- プレビュー -->
         <iframe id="preview"></iframe>
 
-        <!-- Python コンソール -->
         <div id="pyConsole">
             <div id="pyOutput"></div>
             <input type="text" id="pyInput" placeholder="Python input() 用">
