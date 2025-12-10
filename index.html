@@ -1,28 +1,65 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>Online Code Runner</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Web Playground</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 250px;
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+    iframe {
+      width: 100%;
+      height: 350px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>HTML / CSS / JS Playground</h1>
+  <p>ここにコードを書いて「Run」を押すと、下の画面に実行結果が表示されます。</p>
+
+  <textarea id="code">
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: #eef; font-family: sans-serif; }
+    h1 { color: #336; }
+  </style>
 </head>
 <body>
-    <h1>オンライン実行環境</h1>
+  <h1>Hello Web Playground!</h1>
+  <p>ここに HTML / CSS / JS を書いて実行できます。</p>
 
-    <div>
-        <label>言語選択：</label>
-        <select id="lang">
-            <option value="python">Python</option>
-            <option value="c">C</option>
-            <option value="htmljs">HTML/CSS/JS</option>
-        </select>
-    </div>
+  <script>
+    console.log("JS も使えます！");
+  </script>
+</body>
+</html>
+  </textarea>
 
-    <textarea id="editor" placeholder="ここにコードを書いてください"></textarea>
+  <button onclick="run()">Run</button>
 
-    <button id="run">実行</button>
+  <iframe id="preview"></iframe>
 
-    <pre id="output"></pre>
-
-    <script src="js/main.js"></script>
+  <script>
+    function run() {
+      const code = document.getElementById("code").value;
+      const iframe = document.getElementById("preview");
+      iframe.srcdoc = code;
+    }
+  </script>
 </body>
 </html>
