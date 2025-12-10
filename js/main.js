@@ -56,39 +56,6 @@ async function initPyodide() {
 }
 initPyodide();
 
-// ----------------- Python 自動追跡ラッパー -----------------
-const trackWrapper = `
-import builtins
-import ast
-tracker = {}
-def track(varname, value, lineno):
-    if varname not in tracker:
-        tracker[varname] = {'init': value, 'changes': []}
-    if len(tracker[varname]['changes']) < 10:
-        tracker[varname]['changes'].append({'line': lineno, 'value': value})
-    return value
-class TrackTransformer(ast.NodeTransformer):
-    def visit_Assign(self, node):
-        new_nodes = []
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                new_node = ast.Assign(
-                    targets=[target],
-                    value=ast.Call(func=ast.Name(id='track', ctx=ast.Load()),
-                                   args=[ast.Constant(value=target.id), node.value, ast.Constant(value=node.lineno)],
-                                   keywords=[])
-                )
-                new_nodes.append(new_node)
-            else:
-                new_nodes.append(node)
-        return new_nodes
-def wrap_code(source):
-    tree = ast.parse(source)
-    tree = TrackTransformer().visit(tree)
-    ast.fix_missing_locations(tree)
-    return compile(tree, filename="<ast>", mode="exec")
-`;
-
 // ----------------- Runボタン -----------------
 document.getElementById("runBtn").onclick = async () => {
     const activeLang = document.querySelector(".tab.active").dataset.lang;
@@ -99,19 +66,35 @@ document.getElementById("runBtn").onclick = async () => {
             preview.srcdoc = `<pre>Python エンジン読み込み中...</pre>`;
             return;
         }
+
         const code = editors.python.getValue();
         try {
             let output = "";
             pyodide.setStdout({batched: s => { output += s + "\n"; }});
             pyodide.setStderr({batched: s => { output += s + "\n"; }});
 
-            pyodide.runPython(trackWrapper);
-            pyodide.runPython(`
-code = wrap_code("""${code.replace(/\\/g, "\\\\").replace(/"""/g, '\\"""')}""")
-exec(code)
-`);
+            // ----------------- 変数追跡用ラッパー -----------------
+            const trackCode = `
+import sys
+tracker = {}
+def trace_func(frame, event, arg):
+    if event == 'line':
+        locs = frame.f_locals
+        for k,v in locs.items():
+            if k not in tracker:
+                tracker[k] = {'init': v, 'changes': []}
+            if len(tracker[k]['changes']) < 10:
+                tracker[k]['changes'].append({'line': frame.f_lineno, 'value': v})
+    return trace_func
 
+sys.settrace(trace_func)
+`;
+
+            // Pyodideで実行
+            pyodide.runPython(trackCode + "\n" + code);
             const tracker = pyodide.runPython('tracker');
+
+            // tracker 表作成
             let tableHTML = `<table border="1" style="border-collapse: collapse; width:100%; margin-top:10px;">
                 <tr><th>変数名</th><th>初期値</th>`;
             for (let i=1;i<=10;i++) tableHTML += `<th>変化${i}</th>`;
@@ -129,10 +112,13 @@ exec(code)
                 tableHTML += row;
             }
             tableHTML += `</table>`;
+
             preview.srcdoc = `<pre>${output}</pre>${tableHTML}`;
+
         } catch (e) {
             preview.srcdoc = `<pre style="color:red;">Error: ${e}</pre>`;
         }
+
     } else {
         const html = editors.html.getValue();
         const css = `<style>${editors.css.getValue()}</style>`;
