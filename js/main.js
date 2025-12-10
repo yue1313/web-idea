@@ -73,12 +73,14 @@ document.getElementById("runBtn").onclick = async () => {
             pyodide.setStdout({batched: s => { output += s + "\n"; }});
             pyodide.setStderr({batched: s => { output += s + "\n"; }});
 
-            // ----------------- 変数追跡用ラッパー -----------------
+            // ----------------- 変数追跡用コード -----------------
             const trackCode = `
 import sys
+
 tracker = {}
+
 def trace_func(frame, event, arg):
-    if event == 'line':
+    if event == 'opcode':  # opcode 単位で追跡
         locs = frame.f_locals
         for k,v in locs.items():
             if k not in tracker:
@@ -90,7 +92,6 @@ def trace_func(frame, event, arg):
 sys.settrace(trace_func)
 `;
 
-            // Pyodideで実行
             pyodide.runPython(trackCode + "\n" + code);
             const tracker = pyodide.runPython('tracker');
 
