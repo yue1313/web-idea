@@ -1,13 +1,14 @@
 body {
     margin: 0;
     font-family: sans-serif;
-    background: #1e1e1e;
-    color: #ddd;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    background: #1e1e1e;
+    color: #ddd;
 }
 
+/* ヘッダー */
 #header {
     display: flex;
     justify-content: space-between;
@@ -15,82 +16,76 @@ body {
     padding: 10px 20px;
     background: #252526;
 }
-
 #runBtn {
-    padding: 6px 12px;
+    padding: 5px 10px;
     background: #007acc;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
+#runBtn:hover { background: #0a84d6; }
 
+/* タブ */
 #tabbar {
     display: flex;
-    background: #1e1e1e;
     border-bottom: 1px solid #333;
 }
-
 .tab {
-    padding: 8px 14px;
+    padding: 8px 16px;
     cursor: pointer;
     color: #ccc;
 }
-
 .tab.active {
     background: #252526;
     color: white;
     border-bottom: 2px solid #007acc;
 }
 
+/* コンテナ */
 #container {
     flex: 1;
     display: flex;
-    height: calc(100vh - 80px);
 }
 
+/* エディタ */
 #editorPane {
     width: 50%;
     display: flex;
     flex-direction: column;
     border-right: 1px solid #333;
-    background: #1e1e1e;
 }
-
 .editor {
-    flex: 1;
     display: none;
+    flex: 1;
 }
 
-.editor.active {
-    display: block;
-}
-
+/* プレビュー */
 #preview {
     width: 50%;
     border: none;
-    background: white;
+    display: block;
 }
 
+/* Python コンソール */
 #pyConsole {
     display: none;
     flex-direction: column;
-    width: 50%;
     background: #1e1e1e;
     color: #ddd;
-    padding: 10px;
+    width: 50%;
 }
-
 #pyOutput {
     flex: 1;
     overflow-y: auto;
     white-space: pre-wrap;
-    margin-bottom: 5px;
+    padding: 5px;
 }
-
 #pyInput {
-    padding: 6px;
+    padding: 5px;
     font-family: monospace;
+    background: #252526;
+    color: #fff;
     border: none;
     outline: none;
 }
