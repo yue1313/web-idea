@@ -11,7 +11,6 @@ initPyodide();
 function switchLang(lang, e) {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     e.target.classList.add("active");
-
     document.querySelectorAll(".editor").forEach(ed => ed.classList.remove("active"));
     if (lang === "html") document.getElementById("htmlEditor").classList.add("active");
     if (lang === "css") document.getElementById("cssEditor").classList.add("active");
@@ -19,9 +18,34 @@ function switchLang(lang, e) {
     if (lang === "python") document.getElementById("pythonEditor").classList.add("active");
 }
 
-// Python用: 変数追跡ラッパー
+// Python エディタ インデント補助
+const pyEditor = document.getElementById("pythonEditor");
+pyEditor.addEventListener("keydown", function(e) {
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+
+    if (e.key === "Tab") {
+        e.preventDefault();
+        const value = this.value;
+        this.value = value.substring(0, start) + "    " + value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+    } else if (e.key === "Enter") {
+        e.preventDefault();
+        const value = this.value;
+        const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+        const line = value.substring(lineStart, start);
+        const indentMatch = line.match(/^\s*/);
+        const indent = indentMatch ? indentMatch[0] : "";
+        this.value = value.substring(0, start) + "\n" + indent + value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 1 + indent.length;
+    }
+});
+
+// Python 自動追跡ラッパー
 const trackWrapper = `
 import builtins
+import ast
+import _ast
 tracker = {}
 
 def track(varname, value, lineno):
@@ -31,7 +55,31 @@ def track(varname, value, lineno):
         tracker[varname]['changes'].append({'line': lineno, 'value': value})
     return value
 
-# 既存の代入文を track() でラップするには AST 自動変換が必要
+class TrackTransformer(ast.NodeTransformer):
+    def visit_Assign(self, node):
+        new_nodes = []
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                new_node = ast.Assign(
+                    targets=[target],
+                    value=ast.Call(
+                        func=ast.Name(id='track', ctx=ast.Load()),
+                        args=[ast.Constant(value=target.id),
+                              node.value,
+                              ast.Constant(value=node.lineno)],
+                        keywords=[]
+                    )
+                )
+                new_nodes.append(new_node)
+            else:
+                new_nodes.append(node)
+        return new_nodes
+
+def wrap_code(source):
+    tree = ast.parse(source)
+    tree = TrackTransformer().visit(tree)
+    ast.fix_missing_locations(tree)
+    return compile(tree, filename="<ast>", mode="exec")
 `;
 
 // Run ボタン
@@ -50,16 +98,19 @@ document.getElementById("runBtn").onclick = async () => {
         }
         try {
             let output = "";
-
-            // 標準出力とエラー出力をキャプチャ
             pyodide.setStdout({batched: (s) => { output += s + "\n"; }});
             pyodide.setStderr({batched: (s) => { output += s + "\n"; }});
 
-            // trackWrapper を先頭に付けて実行
-            const wrappedCode = trackWrapper + py;
-            const result = pyodide.runPython(wrappedCode);
+            // trackWrapper を読み込み wrap_code 定義
+            pyodide.runPython(trackWrapper);
 
-            // 変数追跡表を作成
+            // ユーザーコードを wrap_code で変換・実行
+            pyodide.runPython(`
+code = wrap_code("""${py.replace(/\\/g, "\\\\").replace(/"""/g, '\\"""')}""")
+exec(code)
+`);
+
+            // 変数追跡表
             const tracker = pyodide.runPython('tracker');
             let tableHTML = `<table border="1" style="border-collapse: collapse; width:100%; margin-top:10px;">
                 <tr><th>変数名</th><th>初期値</th>`;
