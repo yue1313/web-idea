@@ -4,53 +4,31 @@
     <meta charset="UTF-8">
     <title>Web Playground</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body>
     <div id="header">
         <h1>Web Playground</h1>
-        <button id="runBtn" onclick="runCode()">Run ▶</button>
+        <button id="runBtn">Run ▶</button>
     </div>
 
-    <!-- タブバー -->
     <div id="tabbar">
-        <div class="tab active" onclick="switchLang('html')">HTML</div>
-        <div class="tab" onclick="switchLang('css')">CSS</div>
-        <div class="tab" onclick="switchLang('js')">JS</div>
-        <!-- Python / C は後で追加予定 -->
+        <div class="tab active" onclick="switchLang('html', event)">HTML</div>
+        <div class="tab" onclick="switchLang('css', event)">CSS</div>
+        <div class="tab" onclick="switchLang('js', event)">JS</div>
+        <div class="tab" onclick="switchLang('python', event)">Python</div>
     </div>
 
-    <!-- 左：エディタ ／ 右：プレビュー -->
     <div id="container">
         <div id="editorPane">
             <textarea id="htmlEditor" class="editor active" placeholder="HTMLを書いてください"></textarea>
             <textarea id="cssEditor" class="editor" placeholder="CSSを書いてください"></textarea>
             <textarea id="jsEditor" class="editor" placeholder="JavaScriptを書いてください"></textarea>
+            <textarea id="pythonEditor" class="editor" placeholder="Pythonを書いてください"></textarea>
         </div>
-
-        <iframe id="preview"></iframe>
+        <iframe id="preview" sandbox="allow-scripts"></iframe>
     </div>
 
-    <script>
-        function switchLang(lang) {
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            event.target.classList.add("active");
-
-            document.querySelectorAll(".editor").forEach(e => e.classList.remove("active"));
-
-            if (lang === "html") document.getElementById("htmlEditor").classList.add("active");
-            if (lang === "css") document.getElementById("cssEditor").classList.add("active");
-            if (lang === "js") document.getElementById("jsEditor").classList.add("active");
-        }
-
-        function runCode() {
-            const html = document.getElementById("htmlEditor").value;
-            const css = `<style>${document.getElementById("cssEditor").value}</style>`;
-            const js = `<script>${document.getElementById("jsEditor").value}<\/script>`;
-
-            const preview = document.getElementById("preview");
-            const src = html + css + js;
-            preview.srcdoc = src;
-        }
-    </script>
+    <script src="js/main.js"></script>
 </body>
 </html>
