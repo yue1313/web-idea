@@ -13,7 +13,7 @@ function createEditor(id, mode) {
     });
 }
 
-// HTML/CSS/JS/Python 全て CodeMirror で統合
+// HTML/CSS/JS/Python 全て CodeMirror
 editors.html = createEditor("htmlEditor", "xml");
 editors.css = createEditor("cssEditor", "css");
 editors.js = createEditor("jsEditor", "javascript");
@@ -26,25 +26,24 @@ document.querySelectorAll(".tab").forEach(tab => {
         e.target.classList.add("active");
 
         const lang = e.target.dataset.lang;
-        if(lang === "python") {
-            // Python エディタ表示
-            editors.python.getWrapperElement().style.display = "block";
-            // HTML/CSS/JS エディタ非表示
-            editors.html.getWrapperElement().style.display = "none";
-            editors.css.getWrapperElement().style.display = "none";
-            editors.js.getWrapperElement().style.display = "none";
 
-            document.getElementById("preview").style.display = "none";
+        // まずすべて非表示
+        editors.html.getWrapperElement().style.display = "none";
+        editors.css.getWrapperElement().style.display = "none";
+        editors.js.getWrapperElement().style.display = "none";
+        editors.python.getWrapperElement().style.display = "none";
+        document.getElementById("preview").style.display = "none";
+        document.getElementById("pyConsole").style.display = "none";
+
+        // 選択タブだけ表示
+        if(lang === "python"){
+            editors.python.getWrapperElement().style.display = "block";
             document.getElementById("pyConsole").style.display = "flex";
         } else {
-            // HTML/CSS/JS エディタ表示
             editors.html.getWrapperElement().style.display = "block";
             editors.css.getWrapperElement().style.display = "block";
             editors.js.getWrapperElement().style.display = "block";
-            editors.python.getWrapperElement().style.display = "none";
-
             document.getElementById("preview").style.display = "block";
-            document.getElementById("pyConsole").style.display = "none";
         }
     });
 });
@@ -60,7 +59,6 @@ initPyodide();
 
 // ---------------- Python コンソール関連 ----------------
 let inputResolve = null;
-
 function waitForInput() {
     return new Promise(resolve => {
         inputResolve = resolve;
@@ -74,7 +72,7 @@ document.getElementById("pyInput").addEventListener("keydown", (e)=>{
     if(e.key === "Enter" && inputResolve){
         const val = e.target.value;
         const outputEl = document.getElementById("pyOutput");
-        outputEl.textContent += val + "\n"; // echo 入力
+        outputEl.textContent += val + "\n"; // 入力エコー
         inputResolve(val);
         inputResolve = null;
         e.target.value = "";
@@ -100,16 +98,15 @@ document.getElementById("runBtn").onclick = async () => {
         inputEl.disabled = true;
 
         try{
-            // stdin を input() に対応
             pyodide.globals.set("js_input", waitForInput);
+
             await pyodide.runPythonAsync(`
 import sys
-from js import js_input
+from js import js_input, document
 
 class ConsoleIO:
     def write(self, s):
         if s != '\\n':
-            from js import document
             outputEl = document.getElementById("pyOutput")
             outputEl.textContent += s
     def flush(self):
@@ -119,11 +116,11 @@ sys.stdout = ConsoleIO()
 sys.stderr = ConsoleIO()
 
 def input(prompt=""):
-    from js import document
     outputEl = document.getElementById("pyOutput")
     outputEl.textContent += prompt
     return js_input()
 `);
+
             await pyodide.runPythonAsync(code);
         } catch(e){
             outputEl.innerHTML += `<span style="color:red;">${e}</span>\n`;
