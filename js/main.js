@@ -1,6 +1,6 @@
-// ----------------- CodeMirror 初期化 -----------------
 const editors = {};
 
+// ---------------- CodeMirror 初期化 ----------------
 function createEditor(id, mode) {
     return CodeMirror(document.getElementById(id), {
         mode: mode,
@@ -9,21 +9,7 @@ function createEditor(id, mode) {
         indentUnit: 4,
         tabSize: 4,
         indentWithTabs: false,
-        autofocus: true,
-        extraKeys: {
-            "Tab": (cm) => cm.replaceSelection("    ", "end"),
-            "Shift-Tab": (cm) => {
-                const selections = cm.listSelections();
-                selections.forEach(sel => {
-                    const from = sel.from();
-                    const to = sel.to();
-                    for (let i = from.line; i <= to.line; i++) {
-                        const line = cm.getLine(i);
-                        if (line.startsWith("    ")) cm.replaceRange("", {line:i,ch:0}, {line:i,ch:4});
-                    }
-                });
-            }
-        }
+        autofocus: true
     });
 }
 
@@ -32,22 +18,32 @@ editors.css = createEditor("cssEditor", "css");
 editors.js = createEditor("jsEditor", "javascript");
 editors.python = createEditor("pythonEditor", "python");
 
-// ----------------- タブ切替 -----------------
+// ---------------- タブ切替 ----------------
 document.querySelectorAll(".tab").forEach(tab => {
     tab.addEventListener("click", (e) => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
         e.target.classList.add("active");
-        Object.keys(editors).forEach(key => editors[key].getWrapperElement().style.display = "none");
-        editors[tab.dataset.lang].getWrapperElement().style.display = "block";
-        editors[tab.dataset.lang].refresh();
+
+        const lang = e.target.dataset.lang;
+        if(lang === "python") {
+            editors.python.getWrapperElement().style.display = "block";
+            editors.html.getWrapperElement().style.display = "none";
+            editors.css.getWrapperElement().style.display = "none";
+            editors.js.getWrapperElement().style.display = "none";
+            document.getElementById("preview").style.display = "none";
+            document.getElementById("pyConsole").style.display = "flex";
+        } else {
+            editors.python.getWrapperElement().style.display = "none";
+            editors.html.getWrapperElement().style.display = "block";
+            editors.css.getWrapperElement().style.display = "block";
+            editors.js.getWrapperElement().style.display = "block";
+            document.getElementById("preview").style.display = "block";
+            document.getElementById("pyConsole").style.display = "none";
+        }
     });
 });
 
-// 初期表示
-Object.keys(editors).forEach(key => editors[key].getWrapperElement().style.display = "none");
-editors.html.getWrapperElement().style.display = "block";
-
-// ----------------- Pyodide 初期化 -----------------
+// ---------------- Pyodide 初期化 ----------------
 let pyodideReady = false;
 let pyodide;
 async function initPyodide() {
@@ -56,74 +52,78 @@ async function initPyodide() {
 }
 initPyodide();
 
-// ----------------- Runボタン -----------------
+// ---------------- Python コンソール関連 ----------------
+let inputResolve = null;
+
+function waitForInput() {
+    return new Promise(resolve => {
+        inputResolve = resolve;
+        document.getElementById("pyInput").disabled = false;
+        document.getElementById("pyInput").focus();
+    });
+}
+
+document.getElementById("pyInput").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && inputResolve){
+        const val = e.target.value;
+        const outputEl = document.getElementById("pyOutput");
+        outputEl.textContent += val + "\n"; // echo
+        inputResolve(val);
+        inputResolve = null;
+        e.target.value = "";
+        e.target.disabled = true;
+    }
+});
+
+// ---------------- Run ボタン ----------------
 document.getElementById("runBtn").onclick = async () => {
     const activeLang = document.querySelector(".tab.active").dataset.lang;
-    const preview = document.getElementById("preview");
 
-    if (activeLang === "python") {
-        if (!pyodideReady) {
-            preview.srcdoc = `<pre>Python エンジン読み込み中...</pre>`;
+    if(activeLang === "python") {
+        if(!pyodideReady){
+            document.getElementById("pyOutput").textContent = "Python エンジン読み込み中...";
             return;
         }
-
         const code = editors.python.getValue();
-        try {
-            let output = "";
-            pyodide.setStdout({batched: s => { output += s + "\n"; }});
-            pyodide.setStderr({batched: s => { output += s + "\n"; }});
+        const outputEl = document.getElementById("pyOutput");
+        outputEl.textContent = "";
+        document.getElementById("pyInput").value = "";
+        document.getElementById("pyInput").disabled = true;
 
-            // ----------------- 変数追跡用コード -----------------
-            const trackCode = `
+        try{
+            // stdin を input() に対応させる
+            pyodide.globals.set("js_input", waitForInput);
+            await pyodide.runPythonAsync(`
 import sys
+from js import console, js_input
 
-tracker = {}
+class ConsoleIO:
+    def __init__(self):
+        self.output = console
+    def write(self, s):
+        if s != '\\n':
+            console.log(s)
+    def flush(self):
+        pass
 
-def trace_func(frame, event, arg):
-    if event == 'opcode':  # opcode 単位で追跡
-        locs = frame.f_locals
-        for k,v in locs.items():
-            if k not in tracker:
-                tracker[k] = {'init': v, 'changes': []}
-            if len(tracker[k]['changes']) < 10:
-                tracker[k]['changes'].append({'line': frame.f_lineno, 'value': v})
-    return trace_func
+sys.stdout = ConsoleIO()
+sys.stderr = ConsoleIO()
 
-sys.settrace(trace_func)
-`;
+def input(prompt=""):
+    print(prompt, end="")
+    return js_input()
+`);
 
-            pyodide.runPython(trackCode + "\n" + code);
-            const tracker = pyodide.runPython('tracker');
-
-            // tracker 表作成
-            let tableHTML = `<table border="1" style="border-collapse: collapse; width:100%; margin-top:10px;">
-                <tr><th>変数名</th><th>初期値</th>`;
-            for (let i=1;i<=10;i++) tableHTML += `<th>変化${i}</th>`;
-            tableHTML += `</tr>`;
-
-            for (let key of Object.keys(tracker)) {
-                let row = `<tr><td>${key}</td><td>${tracker[key]['init']}</td>`;
-                for (let i=0;i<10;i++) {
-                    if (tracker[key]['changes'][i]) {
-                        const ch = tracker[key]['changes'][i];
-                        row += `<td>${ch['value']} (line ${ch['line']})</td>`;
-                    } else { row += "<td></td>"; }
-                }
-                row += "</tr>";
-                tableHTML += row;
-            }
-            tableHTML += `</table>`;
-
-            preview.srcdoc = `<pre>${output}</pre>${tableHTML}`;
-
-        } catch (e) {
-            preview.srcdoc = `<pre style="color:red;">Error: ${e}</pre>`;
+            await pyodide.runPythonAsync(code);
+        } catch(e){
+            outputEl.innerHTML += `<span style="color:red;">${e}</span>\n`;
         }
 
     } else {
+        // HTML/CSS/JS 同時プレビュー
         const html = editors.html.getValue();
         const css = `<style>${editors.css.getValue()}</style>`;
         const js = `<script>${editors.js.getValue()}<\/script>`;
-        preview.srcdoc = html + css + js;
+        document.getElementById("preview").srcdoc = html + css + js;
     }
 };
