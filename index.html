@@ -1,11 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>My Web Playground</title>
+    <meta charset="UTF-8">
+    <title>Online Code Runner</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>Welcome!</h1>
-  <p>ここに C / Python / HTML の実行環境を作っていきます。</p>
+    <h1>オンライン実行環境</h1>
+
+    <div>
+        <label>言語選択：</label>
+        <select id="lang">
+            <option value="python">Python</option>
+            <option value="c">C</option>
+            <option value="htmljs">HTML/CSS/JS</option>
+        </select>
+    </div>
+
+    <textarea id="editor" placeholder="ここにコードを書いてください"></textarea>
+
+    <button id="run">実行</button>
+
+    <pre id="output"></pre>
+
+    <script src="js/main.js"></script>
 </body>
 </html>
