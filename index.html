@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <title>Web Playground</title>
     <link rel="stylesheet" href="css/styles.css">
-
-    <!-- CodeMirror CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/theme/dracula.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
 </head>
 <body>
     <div id="header">
@@ -15,35 +13,36 @@
         <button id="runBtn">Run ▶</button>
     </div>
 
-    <!-- タブ -->
     <div id="tabbar">
-        <div class="tab active" data-lang="html">HTML</div>
-        <div class="tab" data-lang="css">CSS</div>
-        <div class="tab" data-lang="js">JS</div>
+        <div class="tab active" data-lang="html">HTML/CSS/JS</div>
         <div class="tab" data-lang="python">Python</div>
     </div>
 
-    <!-- エディタ + プレビュー -->
     <div id="container">
+        <!-- エディタ -->
         <div id="editorPane">
-            <div id="htmlEditor"></div>
-            <div id="cssEditor"></div>
-            <div id="jsEditor"></div>
-            <div id="pythonEditor"></div>
+            <textarea id="htmlEditor" class="editor active" placeholder="HTMLを書いてください"></textarea>
+            <textarea id="cssEditor" class="editor active" placeholder="CSSを書いてください"></textarea>
+            <textarea id="jsEditor" class="editor active" placeholder="JSを書いてください"></textarea>
+            <textarea id="pythonEditor" class="editor" placeholder="Pythonを書いてください"></textarea>
         </div>
+
+        <!-- プレビュー -->
         <iframe id="preview"></iframe>
+
+        <!-- Python コンソール -->
+        <div id="pyConsole">
+            <div id="pyOutput"></div>
+            <input type="text" id="pyInput" placeholder="Python input() 用">
+        </div>
     </div>
 
-    <!-- CodeMirror JS -->
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/javascript/javascript.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/xml/xml.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/css/css.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/python/python.js"></script>
-
-    <!-- Pyodide -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
