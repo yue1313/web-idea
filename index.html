@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>Web Playground</title>
     <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/theme/dracula.css">
 </head>
 <body>
     <div id="header">
@@ -12,22 +15,34 @@
         <button id="runBtn">Run ▶</button>
     </div>
 
+    <!-- タブ -->
     <div id="tabbar">
-        <div class="tab active" onclick="switchLang('html', event)">HTML</div>
-        <div class="tab" onclick="switchLang('css', event)">CSS</div>
-        <div class="tab" onclick="switchLang('js', event)">JS</div>
-        <div class="tab" onclick="switchLang('python', event)">Python</div>
+        <div class="tab active" data-lang="html">HTML</div>
+        <div class="tab" data-lang="css">CSS</div>
+        <div class="tab" data-lang="js">JS</div>
+        <div class="tab" data-lang="python">Python</div>
     </div>
 
+    <!-- エディタ + プレビュー -->
     <div id="container">
         <div id="editorPane">
-            <textarea id="htmlEditor" class="editor active" placeholder="HTMLを書いてください"></textarea>
-            <textarea id="cssEditor" class="editor" placeholder="CSSを書いてください"></textarea>
-            <textarea id="jsEditor" class="editor" placeholder="JavaScriptを書いてください"></textarea>
-            <textarea id="pythonEditor" class="editor" placeholder="Pythonを書いてください"></textarea>
+            <div id="htmlEditor"></div>
+            <div id="cssEditor"></div>
+            <div id="jsEditor"></div>
+            <div id="pythonEditor"></div>
         </div>
-        <iframe id="preview" sandbox="allow-scripts"></iframe>
+        <iframe id="preview"></iframe>
     </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/javascript/javascript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/xml/xml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/css/css.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/mode/python/python.js"></script>
+
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 
     <script src="js/main.js"></script>
 </body>
